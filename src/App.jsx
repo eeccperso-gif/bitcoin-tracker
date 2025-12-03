@@ -165,7 +165,7 @@ export default function App() {
             <div className="bg-orange-500 p-2 rounded-lg">
               <Bitcoin className="w-5 h-5" />
             </div>
-            <span className="font-bold text-lg">BTC Tracker</span>
+            <span className="font-bold text-lg">BTC Wallet Honoré</span>
           </div>
           <div className="flex items-center gap-2">
             <button 
