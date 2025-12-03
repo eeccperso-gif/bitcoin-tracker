@@ -21,6 +21,8 @@ export default function App() {
   const [newHolding, setNewHolding] = useState({ name: '', amount: '', buyPrice: '' });
   const [error, setError] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const [priceFlash, setPriceFlash] = useState(null); // 'up', 'down', or null
+  const [previousPrice, setPreviousPrice] = useState(null);
 
   const btcPrice = currency === 'usd' ? btcPriceUsd : btcPriceEur;
   const currencySymbol = currency === 'usd' ? '$' : '€';
@@ -62,7 +64,13 @@ export default function App() {
         const data = await response.json();
         const parsed = api.parse(data);
         
-        setBtcPriceUsd(parsed.usd);
+        setBtcPriceUsd(prev => {
+          if (prev !== null && parsed.usd !== prev) {
+            setPriceFlash(parsed.usd > prev ? 'up' : 'down');
+            setTimeout(() => setPriceFlash(null), 1000);
+          }
+          return parsed.usd;
+        });
         setBtcPriceEur(parsed.eur);
         setPriceChange24h(parsed.change);
         setLastUpdate(new Date());
@@ -80,7 +88,7 @@ export default function App() {
 
   useEffect(() => {
     fetchBtcPrice();
-    const interval = setInterval(fetchBtcPrice, 10000);
+    const interval = setInterval(fetchBtcPrice, 15000);
     return () => clearInterval(interval);
   }, []);
 
@@ -195,7 +203,10 @@ export default function App() {
           <div className="flex items-start justify-between">
             <div>
               <p className={`text-sm mb-1 ${priceChange24h >= 0 ? 'text-green-100' : 'text-red-100'}`}>Bitcoin</p>
-              <p className="text-3xl sm:text-4xl font-bold">
+              <p className={`text-3xl sm:text-4xl font-bold transition-all duration-300 ${
+                priceFlash === 'up' ? 'text-green-300 scale-105' : 
+                priceFlash === 'down' ? 'text-red-300 scale-105' : ''
+              }`}>
                 {btcPrice ? formatCurrency(btcPrice) : '---'}
               </p>
             </div>
@@ -438,7 +449,9 @@ export default function App() {
 
         {/* Footer */}
         <p className="text-center text-gray-600 text-xs pt-4 pb-8">
-          Prix via CoinGecko / Coinbase • MAJ auto 10s
+          Prix via CoinGecko / Coinbase • MAJ auto 15s
+          <br />
+          <span className="text-gray-700">v1.2.0</span>
         </p>
       </main>
     </div>
