@@ -80,7 +80,7 @@ export default function App() {
 
   useEffect(() => {
     fetchBtcPrice();
-    const interval = setInterval(fetchBtcPrice, 30000);
+    const interval = setInterval(fetchBtcPrice, 10000);
     return () => clearInterval(interval);
   }, []);
 
@@ -438,7 +438,7 @@ export default function App() {
 
         {/* Footer */}
         <p className="text-center text-gray-600 text-xs pt-4 pb-8">
-          Prix via CoinGecko / Coinbase • MAJ auto 30s
+          Prix via CoinGecko / Coinbase • MAJ auto 10s
         </p>
       </main>
     </div>
