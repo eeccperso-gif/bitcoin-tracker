@@ -187,26 +187,34 @@ export default function App() {
 
       <main className="px-4 py-4 max-w-2xl mx-auto space-y-4">
         {/* Prix BTC - Card principale */}
-        <div className="bg-gradient-to-br from-orange-600 to-orange-700 rounded-2xl p-5 shadow-lg">
+        <div className={`rounded-2xl p-5 shadow-lg ${
+          priceChange24h >= 0 
+            ? 'bg-gradient-to-br from-green-600 to-green-700' 
+            : 'bg-gradient-to-br from-red-600 to-red-700'
+        }`}>
           <div className="flex items-start justify-between">
             <div>
-              <p className="text-orange-100 text-sm mb-1">Bitcoin</p>
+              <p className={`text-sm mb-1 ${priceChange24h >= 0 ? 'text-green-100' : 'text-red-100'}`}>Bitcoin</p>
               <p className="text-3xl sm:text-4xl font-bold">
                 {btcPrice ? formatCurrency(btcPrice) : '---'}
               </p>
             </div>
             {btcPrice && priceChange24h !== 0 && (
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium ${priceChange24h >= 0 ? 'bg-green-500/30 text-green-100' : 'bg-red-500/30 text-red-100'}`}>
+              <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-sm font-medium ${
+                priceChange24h >= 0 
+                  ? 'bg-green-500/30 text-green-100' 
+                  : 'bg-red-500/30 text-red-100'
+              }`}>
                 {priceChange24h >= 0 ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
                 {priceChange24h.toFixed(2)}%
               </div>
             )}
           </div>
           {error && (
-            <p className="mt-3 text-orange-200 text-sm">{error}</p>
+            <p className={`mt-3 text-sm ${priceChange24h >= 0 ? 'text-green-200' : 'text-red-200'}`}>{error}</p>
           )}
           {lastUpdate && (
-            <p className="text-orange-200/60 text-xs mt-3">
+            <p className={`text-xs mt-3 ${priceChange24h >= 0 ? 'text-green-200/60' : 'text-red-200/60'}`}>
               Mis à jour à {lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
             </p>
           )}
