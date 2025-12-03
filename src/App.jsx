@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Bitcoin, RefreshCw, Plus, Trash2, Edit2, Check, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function App() {
   const [btcPriceUsd, setBtcPriceUsd] = useState(null);
@@ -23,6 +24,8 @@ export default function App() {
   const [expandedId, setExpandedId] = useState(null);
   const [priceFlash, setPriceFlash] = useState(null); // 'up', 'down', or null
   const [previousPrice, setPreviousPrice] = useState(null);
+  const [priceHistory, setPriceHistory] = useState([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
   const btcPrice = currency === 'usd' ? btcPriceUsd : btcPriceEur;
   const currencySymbol = currency === 'usd' ? '$' : '€';
@@ -30,6 +33,31 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('btc-holdings', JSON.stringify(holdings));
   }, [holdings]);
+
+  const fetchPriceHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const response = await fetch(
+        'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=180&interval=daily'
+      );
+      if (response.ok) {
+        const data = await response.json();
+        const formattedData = data.prices.map(([timestamp, price]) => ({
+          date: new Date(timestamp).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }),
+          price: Math.round(price),
+          fullDate: new Date(timestamp)
+        }));
+        setPriceHistory(formattedData);
+      }
+    } catch (err) {
+      console.warn('Failed to fetch price history:', err);
+    }
+    setLoadingHistory(false);
+  };
+
+  useEffect(() => {
+    fetchPriceHistory();
+  }, []);
 
   const fetchBtcPrice = async () => {
     setLoading(true);
@@ -228,6 +256,55 @@ export default function App() {
             <p className={`text-xs mt-3 ${priceChange24h >= 0 ? 'text-green-200/60' : 'text-red-200/60'}`}>
               Mis à jour à {lastUpdate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
             </p>
+          )}
+        </div>
+
+        {/* Graphique 6 mois */}
+        <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+          <p className="text-gray-400 text-xs mb-3">Évolution sur 6 mois</p>
+          {loadingHistory ? (
+            <div className="h-40 flex items-center justify-center">
+              <RefreshCw className="w-5 h-5 animate-spin text-gray-500" />
+            </div>
+          ) : priceHistory.length > 0 ? (
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={priceHistory}>
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fontSize: 10, fill: '#6b7280' }}
+                    tickLine={false}
+                    axisLine={false}
+                    interval={Math.floor(priceHistory.length / 5)}
+                  />
+                  <YAxis 
+                    hide={true}
+                    domain={['dataMin - 1000', 'dataMax + 1000']}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1f2937', 
+                      border: '1px solid #374151',
+                      borderRadius: '8px',
+                      fontSize: '12px'
+                    }}
+                    labelStyle={{ color: '#9ca3af' }}
+                    formatter={(value) => [`$${value.toLocaleString()}`, 'Prix']}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="price" 
+                    stroke={priceHistory[priceHistory.length - 1]?.price >= priceHistory[0]?.price ? '#22c55e' : '#ef4444'}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-40 flex items-center justify-center text-gray-500 text-sm">
+              Données indisponibles
+            </div>
           )}
         </div>
 
@@ -451,7 +528,7 @@ export default function App() {
         <p className="text-center text-gray-600 text-xs pt-4 pb-8">
           Prix via CoinGecko / Coinbase • MAJ auto 15s
           <br />
-          <span className="text-gray-700">v1.2.0</span>
+          <span className="text-gray-700">v1.3.0</span>
         </p>
       </main>
     </div>
